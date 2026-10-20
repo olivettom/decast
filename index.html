@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f1015">
+<title>La DecAst - Stuffs TESO</title>
+<style>
+:root{--bg:#0f1015;--card:#181a24;--gold:#d4af37;--gold2:#f3e5ab;--txt:#e2e8f0;--mut:#94a3b8;--bd:rgba(212,175,55,.3);--red:#f87171}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);margin:0;padding:14px;max-width:900px;margin-inline:auto;-webkit-text-size-adjust:100%}
+header{text-align:center;border-bottom:2px solid var(--gold);padding-bottom:12px;margin-bottom:14px}
+h1{color:var(--gold);margin:0 0 4px;font-size:1.5rem;letter-spacing:2px}
+.sub{color:var(--mut);font-size:.85rem}
+.ver{display:inline-block;margin-top:6px;font-size:.75rem;color:var(--gold2);border:1px solid var(--bd);border-radius:20px;padding:2px 10px}
+#install{display:none;width:100%;background:linear-gradient(135deg,#d4af37,#aa820a);color:#000;font-weight:700;border:0;padding:12px;border-radius:8px;margin-bottom:12px;font-size:1rem;cursor:pointer}
+#q{width:100%;padding:13px;background:var(--card);border:1px solid var(--bd);color:#fff;font-size:1rem;border-radius:8px;margin-bottom:10px}
+#q:focus{outline:2px solid var(--gold)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{background:var(--card);border:1px solid var(--bd);color:var(--txt);padding:8px 12px;border-radius:20px;font-size:.9rem;cursor:pointer}
+.chip.on{background:var(--gold);color:#000;font-weight:700;border-color:var(--gold)}
+#count{color:var(--mut);font-size:.8rem;margin:0 2px 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.hd{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;user-select:none}
+.hd h3{margin:0;color:var(--gold2);font-size:1.05rem;flex:1}
+.tag{font-size:.72rem;padding:2px 8px;border-radius:4px;background:rgba(212,175,55,.15);color:var(--gold);white-space:nowrap}
+.tag.Tank{color:#7dd3fc;background:rgba(125,211,252,.12)}.tag.Heal{color:#86efac;background:rgba(134,239,172,.12)}
+.tag.DD{color:#fca5a5;background:rgba(252,165,165,.12)}.tag.Support{color:#c4b5fd;background:rgba(196,181,253,.12)}
+.arr{color:var(--gold);transition:transform .15s}
+.card.open .arr{transform:rotate(90deg)}
+.bd{display:none;padding:0 14px 14px}
+.card.open .bd{display:block}
+.bd h4{color:var(--gold);margin:14px 0 6px;font-size:.85rem;text-transform:uppercase;letter-spacing:1px}
+ul{margin:4px 0 0 18px;padding:0}li{font-size:.92rem;margin-bottom:5px;line-height:1.35}
+.farm li{list-style:none;margin-left:-18px}
+.farm .n{display:inline-block;min-width:1.6em;color:var(--gold);font-weight:700}
+.prio{color:var(--red);font-weight:700}
+.row{display:grid;grid-template-columns:78px 1fr;gap:2px 8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.06);font-size:.88rem}
+.row .p{color:var(--mut)}.row .s{color:var(--gold2);font-weight:600}.row .s.none{color:var(--mut);font-weight:400}
+.row .d{grid-column:2;color:var(--mut);font-size:.8rem}
+.lk a{color:var(--gold);margin-right:14px;font-size:.9rem}
+.todo{border:1px dashed var(--bd);border-radius:6px;padding:8px 10px;color:var(--mut);font-size:.85rem;margin-top:10px}
+.copy{margin-top:14px;background:transparent;color:var(--gold);border:1px solid var(--gold);padding:10px 14px;border-radius:8px;font-size:.9rem;cursor:pointer;width:100%}
+.copy.ok{background:var(--gold);color:#000}
+.none-found{text-align:center;color:var(--mut);padding:30px 0}
+.zone{color:var(--mut);font-size:.88rem;margin:10px 0 2px}
+.sets li{list-style:none;margin-left:-18px;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)}
+.sets li:first-child{border-top:0}
+.sets .m{display:inline-block;min-width:1.6em}
+.sets .en{color:var(--mut);font-size:.8rem}
+.sets .who{color:var(--gold);font-size:.8rem}
+footer{text-align:center;color:var(--mut);font-size:.72rem;margin:20px 0 6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>LA DECAST</h1>
+  <div class="sub">Stuffs &amp; builds raid &bull; Guilde FR PS5-EU</div>
+  <span class="ver">À jour pour la U52</span>
+</header>
+<button id="install">📲 Installer l'application sur le téléphone</button>
+<input id="q" type="search" placeholder="🔍 Chercher : set, épreuve, classe, rôle (ex : vDSR, Perlescente, Arcaniste, Zenkosh)" autocomplete="off" autocapitalize="off" spellcheck="false">
+<div class="chips" id="chips"></div>
+<div id="count"></div>
+<div id="list"></div>
+<footer>Stuffs à titre indicatif : voyez ça comme une cible. Questions : voir un officier de La Decast.</footer>
+
+<script>
+/* ===== DONNÉES (source : feuille « La Decast - Stuff pour tous », onglets Tanks / Heals / DPS) ===== */
+var ML="https://eso-hub.com/fr/skills/";
+var FARM=[
+{role:"Tank",remarks:["Prio à l'écho lumineux et au perlescent. L'écho ou le perle se portent sur le corps et on complète avec d'autres stuffs qui seront en bijoux et armes.","Les tanks vont souvent porter Archidruide + Perlescent + Marée.","Ou Nazaray + Écho + Assaut puissant.","NB : les traits de l'armure du tank sont à sa discrétion, tant qu'il atteint 33 000."],
+ farm:["Les échos lumineux perfectionnés (corps et bijoux armes)","Garde Perlescente Perfectionnée (corps et bijoux armes)","Nazaray (tête et épaule)","Archidruide Devryic (tête et épaule)","Marée renversée (bijoux et armes)","Profit du pillard perfectionné (bijoux et barre secondaire)","Assaut puissant (bijoux et barre secondaire)","Machine de guerre (bijoux et barre secondaire)","Béhémoth d'encratis (tête et épaule)","Le sermet du Parlepierre (corps et bijoux)","Spallière de ruine (mythique - que l'épaule)","Magma incarné (que la tête)","Veste de chanoine de la crypte (mythique - que le torse)","Génie d'arkasis (corps et bijoux)"]},
+{role:"Heal",remarks:["La Puissance curative (SPC) et le Xoryn se portent en corps, et on complète avec d'autres stuffs en bijoux et armes.","Les heals vont souvent porter Ozezan + Puissance curative + Maître architecte.","Ou Symphonie des Lames + Xoryn + Maître architecte.","Les enchantements des bijoux des heals sont à leur discrétion entre regen et dégâts, tant qu'ils soignent assez (recommandé : 2 dégâts pour 1 regen).","Par expérience, il peut être intéressant d'utiliser une pièce en moyen quand les combats sont mobiles ou si le healer porte l'Assaut puissant (4 % de regen vigueur + passif Indomptables)."],
+ farm:["Bâton de rétablissement du maître","Puissance curative (corps)","Assaut puissant (armes et bijoux)","Profit du pillard (corps/armes et bijoux)","Chef-d'œuvre de Xoryn perfectionné (corps)","Maître architecte (armes et bijoux/corps)","Ozezan l'infernal (tête et épaules)","Symphonie des Lames (tête et épaules)"]},
+{role:"DD",remarks:["Actuellement les classes demandées partout (par ordre de prio) : Arcaniste, puis Nécro, puis Loup-garou, puis Lame noire, puis Sorcier.","La plupart du temps, vous jouerez le set DPS de votre classe obtenu aux Archives infinies + un set de raid.","Null Arca sur les boss, Épée et Sul-Xan + bâton sur les groupes de monstres."],
+ farm:["Set de classe des Archives infinies (en corps)","Les fragments perfectionnés du Null Arca (en corps puis bijoux et armes)","L'amulette d'Ur-mage Velothi (mythique - que le collier)","Épaulière de set de monstre qui donne des crits en 1 pièce (épaule OU tête)","Épée de Maelstrom perfectionnée (épée à deux mains)","Bâton de feu de Maelstrom perfectionné (bâton de feu)","Le traquepiste des enfants des marées (bijoux et armes)","Le tourment des Sul-Xan perfectionnés (corps puis bijoux)","Masque du chasseur (mythique - que la tête)"]},
+{role:"Support",remarks:["Chaque classe/DD a sa finalité, il n'y a pas de liste de stuffs globale pour eux.","Avant de monter ce perso support, assurez-vous qu'il y a de la place pour vous dans le roster.","Je vous recommande de faire votre DD support APRÈS avoir monté un DD qui tape.","On n'a pas toujours besoin de chaque support dans chaque raid (sauf les Zenkosh) et il n'y a de la place que pour un seul du genre.","En tant que support, vous êtes à la demande de votre RL : demandez-lui de quoi il a besoin."],farm:[]}
+];
+
+var C=[
+{role:"Tank",cls:"Sorcier",title:"Sorcier tank",
+ game:["Il sert surtout à donner berserk majeur via l'Atronach chargé et à renforcer la survie du groupe via Sphère d'influence.","Il donne aussi 6 % de dégâts bonus via Défense calculée et a une très bonne survie grâce aux boucliers.","Il veut généralement ultime dans un second temps pour étendre les buffs via le Nazaray et le Pillard."],
+ m1:"sorcier/sorcier-maitrise-de-classe/defense-calculee",m2:"sorcier/sorcier-maitrise-de-classe/sphere-dinfluence",
+ ult:["Atronach chargé","Barrière"],
+ b:["Tête|Solide/Divins|Moyen|Prismatique|Nazaray","Épaule|Solide/Divins|Léger|Prismatique|Nazaray","Torse|Renforcé|Lourd|Prismatique|Les échos lumineux perfectionnés","Gants|Renforcé|Lourd|Prismatique|Les échos lumineux perfectionnés","Ceinture|Solide/Divins|Lourd|Prismatique|Les échos lumineux perfectionnés","Jambes|Renforcé|Lourd|Prismatique|Les échos lumineux perfectionnés","Pieds|Renforcé|Lourd|Prismatique|Les échos lumineux perfectionnés","Anneau 1|Infusé/Harmonieux|/|Réduction des coûts / Regen magie|Profit du pillard perfectionné","Anneau 2|Infusé/Harmonieux|/|Réduction des coûts / Regen magie|Profit du pillard perfectionné","Collier|Infusé/Harmonieux|/|Réduction des coûts / Regen magie|Profit du pillard perfectionné","Barre 2|Infusé|Bâton de glace|Réduction d'armure|Profit du pillard perfectionné","Main droite|Décisif|Arme à une main|Génération de bouclier|Tresse druidique","Main gauche|Solide/Infusé/Divins|Bouclier|Prismatique|Armure du débutant"]},
+{role:"Tank",cls:"Chevalier-dragon DK",title:"DK tank",
+ game:["Il amène berserk majeur et protection majeure quand il ultime. Bon porteur du set Génie d'Arkasis pour cette raison.","Il donne aussi 300 dégâts des armes via son Étendard de puissance, brutalité majeure/mineure au groupe, ainsi que 160 dégâts des armes via le Poing de magma.","Excellente survivabilité personnelle, avec un ultime qui le rend quasiment invincible pendant 10 secondes.","En cas de DK Zenkosh en DPS support, son intérêt peut être réduit."],
+ m1:"chevalier-dragon/chevalier-dragon-maitrise-de-classe/mener-depuis-le-front",m2:"chevalier-dragon/chevalier-dragon-maitrise-de-classe/defense-determinee",
+ ult:["Étendard de puissance","Carapace de magma"],
+ b:["Tête|Divins|Moyen|Prismatique|Béhémoth d'encratis","Épaule|Divins|Léger|Prismatique|Béhémoth d'encratis","Torse|Renforcé|Lourd|Prismatique|Les échos lumineux perfectionnés","Gants|Solide/Divins|Lourd|Prismatique|Les échos lumineux perfectionnés","Ceinture|Solide/Divins|Lourd|Prismatique|Les échos lumineux perfectionnés","Jambes|Renforcé|Lourd|Prismatique|Les échos lumineux perfectionnés","Pieds|Renforcé|Lourd|Prismatique|Les échos lumineux perfectionnés","Anneau 1|Infusé|/|Réduction des délais des potions|Génie d'Arkasis","Anneau 2|Infusé|/|Réduction des délais des potions|Génie d'Arkasis","Collier|Infusé|/|Réduction des délais des potions|Génie d'Arkasis","Barre 2|Infusé|Bâton de glace|Réduction d'armure|Génie d'Arkasis","Main droite|Décisif|Arme à une main|Génération de bouclier|Génie d'Arkasis","Main gauche|Solide/Infusé/Divins|Bouclier|Prismatique|Génie d'Arkasis"]},
+{role:"Tank",cls:"Nécromancien",title:"Nécromancien tank",
+ game:["La meilleure source de vulnérabilité majeure et mineure du jeu.","Très bonne survie personnelle avec des compétences très fortes et un gros pool de vie.","Sa génération d'ultime exceptionnelle en fait un très bon porteur de Chanoine.","En cas de DPS nécro, son intérêt est plus limité."],
+ m1:"necromancien/necromancien-maitrise-de-classe/sans-gaspillage",m2:"necromancien/necromancien-maitrise-de-classe/cycle-sans-fin",
+ ult:["Barre 1 : Colosse glacial","Barre 2 : Renouvellement d'animation"],
+ b:["Tête|Divins|Moyen|Prismatique|Archidruide Devryic","Épaule|Divins|Léger|Prismatique|Archidruide Devryic","Torse|Renforcé|Lourd|Prismatique|Garde Perlescente perfectionnée","Gants|Renforcé|Lourd|Prismatique|Garde Perlescente perfectionnée","Ceinture|Solide/Divins|Lourd|Prismatique|Garde Perlescente perfectionnée","Jambes|Renforcé|Lourd|Prismatique|Garde Perlescente perfectionnée","Pieds|Renforcé|Lourd|Prismatique|Garde Perlescente perfectionnée","Anneau 1|Infusé|/|Réduction du délai des potions|Marée renversée","Anneau 2|Infusé|/|Réduction du délai des potions|Marée renversée","Collier|Infusé|/|Réduction du délai des potions|Marée renversée","Barre 2|Infusé|Bâton de glace|Réduction d'armure|Marée renversée","Main droite|Décisif|Arme à une main|Génération de bouclier|Marée renversée","Main gauche|Solide/Infusé/Divins|Bouclier|Prismatique|Marée renversée"]},
+{role:"Tank",cls:"Gardien",title:"Gardien tank (off-tank)",
+ game:["Seule source de fragilité majeure du jeu et très bonne source d'héroïsme majeur.","Sa survie personnelle et sa gestion de ressources laissent un peu à désirer, on le préfère donc en off-tank.","En cas de heal Gardien, son utilité est très réduite."],
+ m1:"gardien/gardien-maitrise-de-classe/gueule-de-la-toundra",m2:"",
+ ult:["Barre 1 : Compagnon animal","Barre 2 : Barrière"],
+ todo:"Maîtrise de classe 2 non renseignée dans la feuille.",
+ b:["Tête|Divins|Moyen|Prismatique|Magma incarné","Épaule|Divins|Léger|Prismatique|Spallière de ruine","Torse|Renforcé|Lourd|Prismatique|Dédain du serpent","Gants|Solide/Divins|Lourd|Prismatique|Dédain du serpent","Ceinture|Solide/Divins|Lourd|Prismatique|Dédain du serpent","Jambes|Renforcé|Lourd|Prismatique|Dédain du serpent","Pieds|Renforcé|Lourd|Prismatique|Dédain du serpent","Anneau 1|Infusé/Harmonieux|/|Réduction des coûts / Regen magie|Assaut puissant","Anneau 2|Infusé/Harmonieux|/|Réduction des coûts / Regen magie|Assaut puissant","Collier|Infusé/Harmonieux|/|Réduction des coûts / Regen magie|Assaut puissant","Barre 2|Infusé|Bâton de glace|Réduction d'armure|Assaut puissant","Main droite|Décisif|Arme à une main|Génération de bouclier|Tresse druidique","Main gauche|Solide/Infusé/Divins|Bouclier|Prismatique|Armure du débutant"]},
+
+{role:"Heal",cls:"Gardien",title:"Gardien heal",
+ game:["Seule source de fragilité majeure du jeu et très bonne source d'héroïsme majeur.","En cas de heal Gardien, son utilité est très réduite."],
+ m1:"gardien/gardien-maitrise-de-classe/gueule-de-la-toundra",m2:"gardien/gardien-maitrise-de-classe/moisson-genereuse",
+ ult:["Barre 1 : Compagnon animal","Barre 2 : Barrière"],
+ todo:"Sets de la tête et des épaules, des bijoux et des armes non renseignés dans la feuille (seul le Dédain du serpent est indiqué sur torse, gants, ceinture, jambes, pieds).",
+ b:["Tête|Divins|Léger|Magie max|","Épaule|Divins|Léger|Magie max|","Torse|Divins|Léger|Magie max|Dédain du serpent","Gants|Divins|Léger|Magie max|Dédain du serpent","Ceinture|Divins|Léger|Magie max|Dédain du serpent","Jambes|Divins|Léger|Magie max|Dédain du serpent","Pieds|Divins|Léger|Magie max|Dédain du serpent","Anneau 1|Infusé|/|Dégâts des armes et des sorts / Regen magie|","Anneau 2|Infusé|/|Dégâts des armes et des sorts / Regen magie|","Collier|Infusé|/|Dégâts des armes et des sorts / Regen magie|","Barre 2|Chargé|Bâton de glace|Dégâts de glace|","Main droite|Énergisé|Bâton de rétablissement|Dégâts des armes et des sorts / Regen magie|"]},
+{role:"Heal",cls:"Arcaniste",title:"Arcaniste heal",
+ game:["Grâce à la maîtrise de classe Verve de scribe, l'Arcaniste donne la Force majeure (même buff que le Cor) au groupe, augmentant les dégâts critiques de 20 %.","Grâce à la maîtrise de classe Rigueur d'érudit, l'Arcaniste donne la protection majeure au groupe."],
+ m1:"arcanist/arcanist-maitrise-de-classe/verve-de-scribe",m2:"arcanist/arcanist-maitrise-de-classe/rigueur-derudit",
+ ult:["Barre 1 : Glyphique des marées","Barre 2 : Barrière"],
+ todo:"Aucun set renseigné dans la feuille pour ce build (traits, poids et enchantements seulement).",
+ b:["Tête|Divins|Léger|Magie max|","Épaule|Divins|Léger|Magie max|","Torse|Divins|Léger|Magie max|","Gants|Divins|Léger|Magie max|","Ceinture|Divins|Léger|Magie max|","Jambes|Divins|Léger|Magie max|","Pieds|Divins|Léger|Magie max|","Anneau 1|Infusé|/||","Anneau 2|Infusé|/||","Collier|Infusé|/||","Barre 2|Chargé||Dégâts de foudre ou Affaiblissant|","Barre 1 droite|Énergisé||Dégâts des armes et des sorts / Regen magie|"]},
+
+{role:"DD",cls:"Arcaniste",title:"Arcaniste DPS",
+ game:["Grâce à la maîtrise de classe Émergence abyssale, il fait extrêmement mal sur son timing d'ultime. Ce timing est à maîtriser par cœur.","Une team d'arcanistes bien optimisée peut détruire très rapidement la grande majorité des boss du jeu.","Très bon sur les groupes de monstres un peu éparpillés, avec une portée colossale qui permet de DPS depuis une bonne distance.","Joué en Frappe mortelle la plupart du temps. On utilise la Disjonction giclante (son set d'archive) sur les boss qu'on doit focus longtemps.","Si changement de cible fréquent, favoriser aussi la Frappe mortelle.","Compétences : Portail / Glace / Orbe."],
+ m1:"arcanist/arcanist-maitrise-de-classe/emergence-abyssale",m2:"arcanist/arcanist-maitrise-de-classe/potentiel-delie",
+ ult:["Barre 1 : Aubéclat parfait","Barre 2 : L'œil languide"],
+ b:["Tête|Divins|Moyen|Vigueur|Frappe mortelle","Épaule|Divins|Moyen|Vigueur|Rampefange","Torse|Divins|Moyen|Vigueur|Les fragments du Null Arca perfectionnés","Gants|Divins|Moyen|Vigueur|Les fragments du Null Arca perfectionnés","Ceinture|Divins|Moyen|Vigueur|Les fragments du Null Arca perfectionnés","Jambes|Divins|Moyen|Vigueur|Les fragments du Null Arca perfectionnés","Pieds|Divins|Moyen|Vigueur|Les fragments du Null Arca perfectionnés","Anneau 1|Soif de sang|/|Dégâts des armes|Frappe mortelle","Anneau 2|Soif de sang|/|Dégâts des armes|Frappe mortelle","Collier|Soif de sang|/|Dégâts des armes|Amulette d'Ur-mage Velothi","Barre 2|Infusé|Épée à deux mains|Dégâts des armes|Charge impitoyable perfectionnée","Barre 1 droite|Nirn|Dague|Feu|Frappe mortelle","Barre 1 gauche|Chargé|Dague|Poison|Frappe mortelle"]},
+{role:"DD",cls:"Nécromancien",title:"Nécromancien DPS",
+ game:["Gros dégâts dans une zone autour de la cible : un des meilleurs DPS en situation de boss + mini-boss ou groupes de monstres packés.","La plupart de ses dégâts viennent de son set d'archive Brise-Cadavre, donc obligatoire sur lui.","Le secret de ses dégâts : consommer le plus de cadavres possible, d'où une rotation complexe à maîtriser (surtout comparée à l'Arcaniste).","Ses dégâts augmentent à mesure que la cible perd de la vie : très bon complément de l'Arcaniste, souvent plus fort au début."],
+ m1:"necromancien/necromancien-maitrise-de-classe/cycle-sans-fin",m2:"necromancien/necromancien-maitrise-de-classe/sans-gaspillage",
+ ult:["Barre 1 : Aubéclat parfait","Barre 2 : Goliath marteleur"],
+ b:["Tête|Divins|Moyen|Vigueur|Brise-Cadavre","Épaule|Divins|Moyen|Vigueur|Rampefange","Torse|Divins|Moyen|Vigueur|Les fragments du Null Arca perfectionnés","Gants|Divins|Moyen|Vigueur|Les fragments du Null Arca perfectionnés","Ceinture|Divins|Moyen|Vigueur|Les fragments du Null Arca perfectionnés","Jambes|Divins|Moyen|Vigueur|Les fragments du Null Arca perfectionnés","Pieds|Divins|Moyen|Vigueur|Les fragments du Null Arca perfectionnés","Anneau 1|Soif de sang|/|Dégâts des armes|Brise-Cadavre","Anneau 2|Soif de sang|/|Dégâts des armes|Brise-Cadavre","Collier|Soif de sang|/|Dégâts des armes|Amulette d'Ur-mage Velothi","Barre 2|Infusé|Épée à deux mains|Dégâts des armes|Charge impitoyable perfectionnée","Barre 1 droite|Nirn|Dague|Feu|Brise-Cadavre","Barre 1 gauche|Chargé|Dague|Poison|Brise-Cadavre"]},
+
+{role:"Support",cls:"Chevalier-dragon DK",title:"DK Zenkosh",
+ game:["Joué avec le set d'Alkosh, qui réduit l'armure des cibles en face de vous à chaque synergie (une synergie toutes les 6 secondes).","Et le Z'en, qui augmente les dégâts de 1 % sur la cible pour chaque dégât sur la durée venant de vous (max 5 %).","Peut aussi amener berserk majeur, brutalité mineure et le Poing de magma : un des supports DPS les plus impactants du jeu.","S'il y a un DK tank dans le groupe, demandez à votre RL ce que vous devez garder/changer dans vos sorts.","S'il y a un Loup-garou Zenkosh, changer pour un DD qui tape ou éventuellement DK DPS avec le Brûlot et le Null Arca + Velothi (voir avec votre RL)."],
+ m1:"chevalier-dragon/chevalier-dragon-maitrise-de-classe/mener-depuis-le-front",m2:"chevalier-dragon/chevalier-dragon-maitrise-de-classe/defense-determinee",
+ ult:["Barre 1 : Aubéclat parfait","Barre 2 : Étendard mouvant"],
+ b:["Tête|Divins|Moyen|Vigueur|Masque du chasseur","Épaule|Divins|Léger|Vigueur|Rampefange","Torse|Divins|Moyen|Vigueur|Rugissement d'Alkosh","Gants|Divins|Moyen|Vigueur|Rugissement d'Alkosh","Ceinture|Divins|Moyen|Vigueur|Rugissement d'Alkosh","Jambes|Divins|Moyen|Vigueur|Rugissement d'Alkosh","Pieds|Divins|Moyen|Vigueur|Rugissement d'Alkosh","Anneau 1|Soif de sang|/|Dégâts des armes|Redressement de Z'en","Anneau 2|Soif de sang|/|Dégâts des armes|Redressement de Z'en","Collier|Soif de sang|/|Dégâts des armes|Redressement de Z'en","Barre 2|Infusé|Épée à deux mains|Dégâts des armes|Charge impitoyable perfectionnée","Barre 1 droite|Nirn|Dague|Feu|Redressement de Z'en","Barre 1 gauche|Chargé|Dague|Poison|Redressement de Z'en"]},
+{role:"Support",cls:"Sorcier",title:"Sorcier Zenkosh (WW)",
+ game:["Joué avec le set d'Alkosh, qui réduit l'armure des cibles en face de vous à chaque synergie (une synergie toutes les 6 secondes).","Et le Z'en, qui augmente les dégâts de 1 % sur la cible pour chaque dégât sur la durée venant de vous (max 5 %).","Apporte le courage majeur et permet aux heals de jouer avec un set différent de la Puissance curative.","La synergie de son cri donne 6 % de dégâts bonus au groupe.","Meilleur DPS monocible que le DK Zenkosh.","Si Sorcier, apporte aussi Défense calculée qui donne 6 % de bonus de dégâts au groupe."],
+ m1:"sorcier/sorcier-maitrise-de-classe/defense-calculee",m2:"sorcier/sorcier-maitrise-de-classe/sphere-dinfluence",
+ ult:["Barre 1 : Loup-garou enragé","Barre 2 : Étendard mouvant"],
+ b:["Tête|Divins|Moyen|Vigueur|Redressement de Z'en","Épaule|Divins|Léger|Vigueur|Rampefange","Torse|Divins|Moyen|Vigueur|Rugissement d'Alkosh","Gants|Divins|Moyen|Vigueur|Rugissement d'Alkosh","Ceinture|Divins|Moyen|Vigueur|Rugissement d'Alkosh","Jambes|Divins|Moyen|Vigueur|Rugissement d'Alkosh","Pieds|Divins|Moyen|Vigueur|Rugissement d'Alkosh","Anneau 1|Soif de sang|/|Dégâts des armes|Redressement de Z'en","Anneau 2|Soif de sang|/|Dégâts des armes|Chevalière des chemins brisés","Collier|Soif de sang|/|Dégâts des armes|Redressement de Z'en","Barre 2|Infusé|Épée à deux mains|Dégâts des armes|Charge impitoyable perfectionnée","Barre 1 droite|Nirn|Dague|Feu|Redressement de Z'en","Barre 1 gauche|Chargé|Dague|Poison|Redressement de Z'en"]}
+];
+
+var INFO=["Ce document est destiné aux joueurs de la guilde La Decast qui souhaitent améliorer leur stuff et devenir « opti » pour faire du contenu plus dur, voire rejoindre le roster HM.","Les stuffs indiqués sont à titre indicatif : faites au mieux si vous ne les avez pas. Voyez ça comme une cible.","Les stuffs listés sont ceux ACTUELLEMENT joués en compo raid meta. Il manquera certainement des objets que vous avez vus en ligne.","Questions ou précisions : voir un officier de La Decast.","Extérieur à la guilde et curieux de nous rejoindre ou de contribuer au fichier : contacter « Massacor » sur Discord."];
+var TODO=["Ajouter les heals (partiel)","Ajouter le WW dans DPS qui tape","Ajouter le Templier dans DPS supp","Ajouter le Sorcier dans DPS qui tapent","Ajouter le NB dans DPS qui tapent","Ajouter les points de champion","Ajouter les vidéos de parse pour chaque DD"];
+
+/* ===== ÉPREUVES (source : ESO-Hub FR ; marques 🔥/⭐ = feuille de guilde uniquement) ===== */
+/* set = [nom FR, nom EN, marque, rôle] */
+var TRIALS=[
+{n:"Archive æthérienne",c:"vAA",z:"Raidelorn",s:[["Le Guerrier défenseur","Defending Warrior"],["Le Mage guérisseur","Healing Mage"],["L'Infaillible Mage","Infallible Mage"],["Le Serpent rapide","Quick Serpent"]]},
+{n:"Citadelle d'Hel Ra",c:"vHRC",z:"Raidelorn",s:[["Le Guerrier furieux","Berserking Warrior"],["Le Mage destructeur","Destructive Mage"],["L'Éternel Guerrier","Eternal Warrior"],["Le Serpent venimeux","Poisonous Serpent"]]},
+{n:"Sanctum Ophidia",c:"vSO",z:"Raidelorn",s:[["Le Guerrier immortel","Immortal Warrior"],["Le Mage avisé","Wise Mage"],["Le Serpent à deux crocs","Twice-Fanged Serpent"],["Le Cruel Serpent","Vicious Serpent"]]},
+{n:"Gueule de Lorkhaj",c:"vMoL",z:"La marche de la Camarde",s:[["Bastion lunaire","Lunar Bastion"],["Danselune","Moondancer"],["Le Remède du crépuscule","Twilight Remedy"],["Le Rugissement d'Alkosh","Roar of Alkosh","🔥","support Zenkosh"]]},
+{n:"Salles de la fabrication",c:"vHoF",z:"Vvardenfell",s:[["La Défense automatique","Automated Defense"],["La Garde de l'inventeur","Inventor's Guard"],["Le Maître architecte","Master Architect","🔥","heal"],["La Machine de guerre","War Machine","⭐","tank"]]},
+{n:"Asile sanctuaire",c:"vAS",z:"La Cité mécanique",note:"Aucun set d'armure : 6 sets d'armes.",s:[["Bénédiction intemporelle","Timeless Blessing"],["Entaille disciplinée","Disciplined Slash"],["Force concentrée","Concentrated Force"],["Jaillissement perforant","Piercing Spray"],["Position défensive","Defensive Position"],["Tourbillon chaotique","Chaotic Whirlwind"]]},
+{n:"Pas-des-Nuées",c:"vCR",z:"Le Couchant",s:[["L'Égide de Galenwe","Aegis of Galenwe"],["Les Armes de Relequen","Arms of Relequen"],["Le Manteau de Siroria","Mantle of Siroria"],["La Vêture d'Olorimë","Vestment of Olorime"]]},
+{n:"Sollance",c:"vSS",z:"Le Nord d'Elsweyr",s:[["La Dent de Lokkestiiz","Tooth of Lokkestiiz"],["La Griffe d'Yolnahkriin","Claw of Yolnahkriin"],["Le Dévot du faux dieu","False God's Devotion"],["L'Œil de Nahviintaas","Eye of Nahviintaas"]]},
+{n:"Égide de Kyne",c:"vKA",z:"L'Ouest de Bordeciel",s:[["Commandement de Vrol","Vrol's Command"],["La Puissance d'Yandir","Yandir's Might"],["Le Vent de Kyne","Kyne's Wind"],["L'Opportuniste rugissant","Roaring Opportunist"]]},
+{n:"Rochebosque",c:"vRG",z:"Le Bois noir",s:[["La Folie de Bahsei","Bahsei's Mania"],["Le Champion des Saxhleel","Saxhleel Champion"],["Le Serment du Parlepierre","Stone-Talker's Oath","⭐","tank"],["Le Tourment des Sul-Xan","Sul-Xan's Torment","🔥","DPS"]]},
+{n:"Le Récif des Voiles funestes",c:"vDSR",z:"Île-Haute et Amenos",s:[["Lame de corail","Coral Riptide"],["Garde perlescente","Pearlescent Ward","🔥","tank"],["Le Profit du pillard","Pillager's Profit","🔥","tank / heal"],["Le Tourbillon des profondeurs","Whorl of the Depths"]]},
+{n:"Le Bord de la Folie",c:"vSE",z:"La Péninsule Telvanni",s:[["Le Tourment d'Ansuul","Ansuul's Torment"],["La Paix et Sérénité","Peace and Serenity"],["L'Espoir transformatif","Transformative Hope"],["L'Épreuve de détermination","Test of Resolve"]]},
+{n:"Citadelle lumineuse",c:"vLC",z:"West Weald",s:[["Les Échos lumineux","Lucent Echoes","🔥","tank"],["La Thèse de scribe de Mora","Mora Scribe's Thesis"],["Les Fragments du Null Arca","Slivers of the Null Arca","🔥","DPS"],["Le Chef-d'œuvre de Xoryn","Xoryn's Masterpiece","🔥","heal"]]},
+{n:"Cage d'Ossein",c:"vOC",z:"Solstice",s:[["L'Arène de Douleur"],["L'Harmonie du Chaos"],["La Convergence reposante"],["Le Sceau cruel de Kazpian"]]}
+];
+
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function norm(s){return String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g,"'").replace(/œ/g,"oe")}
+var ROLE_LBL={Tank:"🛡️ Tank",Heal:"💚 Heal",DD:"⚔️ DD",Support:"✨ Support"};
+var ROLE_ALIAS={Tank:"tank",Heal:"heal healer soigneur",DD:"dd dps degats",Support:"support supp zenkosh"};
+
+C.forEach(function(d,i){
+  d.id="c"+i;
+  d.rows=d.b.map(function(r){var p=r.split("|");return {piece:p[0],traits:p[1],poids:p[2],ench:p[3],set:p[4]||""}});
+  d.blob=norm([d.title,d.cls,d.role,ROLE_ALIAS[d.role],d.game.join(" "),d.ult.join(" "),d.rows.map(function(r){return [r.piece,r.traits,r.poids,r.ench,r.set].join(" ")}).join(" ")].join(" "));
+});
+FARM.forEach(function(f,i){
+  f.id="f"+i;
+  f.blob=norm(["farm priorite priorites stuffs a farmer",f.role,ROLE_ALIAS[f.role],f.remarks.join(" "),f.farm.join(" ")].join(" "));
+});
+
+function buildRow(r){
+  var det=[r.traits,r.poids&&r.poids!=="/"?r.poids:"",r.ench].filter(Boolean).join(" · ");
+  return '<div class="row"><div class="p">'+esc(r.piece)+'</div><div class="s'+(r.set?'':' none')+'">'+(r.set?esc(r.set):'—')+'</div><div class="d">'+esc(det)+'</div></div>';
+}
+function cardClass(d){
+  var h='<div class="card" id="'+d.id+'" data-k="c"><div class="hd"><h3>'+esc(d.title)+'</h3><span class="tag '+d.role+'">'+ROLE_LBL[d.role]+'</span><span class="arr">▶</span></div><div class="bd">';
+  h+='<h4>Gameplay</h4><ul>'+d.game.map(function(g){return '<li>'+esc(g)+'</li>'}).join('')+'</ul>';
+  h+='<h4>Ultimes</h4><ul>'+d.ult.map(function(u){return '<li>'+esc(u)+'</li>'}).join('')+'</ul>';
+  var lk='';
+  if(d.m1)lk+='<a href="'+ML+d.m1+'" target="_blank" rel="noopener">Maîtrise 1 ↗</a>';
+  if(d.m2)lk+='<a href="'+ML+d.m2+'" target="_blank" rel="noopener">Maîtrise 2 ↗</a>';
+  if(lk)h+='<h4>Maîtrises de classe</h4><div class="lk">'+lk+'</div>';
+  h+='<h4>Build</h4>'+d.rows.map(buildRow).join('');
+  if(d.todo)h+='<div class="todo">⚠️ '+esc(d.todo)+'</div>';
+  h+='<button class="copy" data-copy="'+d.id+'">📋 Copier pour Discord</button></div></div>';
+  return h;
+}
+function cardFarm(f){
+  var h='<div class="card farm" id="'+f.id+'" data-k="f"><div class="hd"><h3>⭐ Stuffs à farmer · '+esc(f.role)+'</h3><span class="tag '+f.role+'">'+ROLE_LBL[f.role]+'</span><span class="arr">▶</span></div><div class="bd">';
+  h+='<h4>Remarques générales</h4><ul>'+f.remarks.map(function(g){return '<li>'+esc(g)+'</li>'}).join('')+'</ul>';
+  if(f.farm.length){h+='<h4>Par ordre de priorité</h4><ul>'+f.farm.map(function(g,i){return '<li><span class="n">'+(i+1)+'.</span>'+esc(g)+'</li>'}).join('')+'</ul>';
+    h+='<button class="copy" data-copy="'+f.id+'">📋 Copier pour Discord</button>';}
+  else h+='<div class="todo">Pas de liste de stuffs globale pour les supports : voir chaque fiche et demander à votre RL.</div>';
+  return h+'</div></div>';
+}
+function cardInfo(){
+  return '<div class="card" id="info" data-k="i"><div class="hd"><h3>ℹ️ Avant de démarrer</h3><span class="tag">U52</span><span class="arr">▶</span></div><div class="bd"><ul>'+INFO.map(function(g){return '<li>'+esc(g)+'</li>'}).join('')+'</ul><h4>Reste à faire (feuille de la guilde)</h4><ul>'+TODO.map(function(g){return '<li>'+esc(g)+'</li>'}).join('')+'</ul></div></div>';
+}
+function cardTrial(t){
+  var h='<div class="card" id="'+t.id+'" data-k="t"><div class="hd"><h3>🏛️ '+esc(t.n)+'</h3><span class="tag">'+esc(t.c)+'</span><span class="arr">▶</span></div><div class="bd">';
+  h+='<div class="zone">📍 '+esc(t.z)+'</div>';
+  if(t.note)h+='<div class="todo">'+esc(t.note)+'</div>';
+  h+='<h4>Sets</h4><ul class="sets">'+t.s.map(function(s){
+    return '<li><span class="m">'+(s[2]||'')+'</span>'+esc(s[0])+(s[3]?' <span class="who">('+esc(s[3])+')</span>':'')+(s[1]?'<br><span class="en">'+esc(s[1])+'</span>':'')+'</li>';
+  }).join('')+'</ul>';
+  h+='<button class="copy" data-copy="'+t.id+'">📋 Copier pour Discord</button></div></div>';
+  return h;
+}
+function mdTrial(t){
+  return "**"+t.n+"** (`"+t.c+"`) · "+t.z+"\n"+t.s.map(function(s){return "• "+(s[2]?s[2]+" ":"")+s[0]+(s[3]?" ("+s[3]+")":"")}).join("\n");
+}
+TRIALS.forEach(function(t,i){
+  t.id="t"+i;
+  t.role="trials";
+  t.blob=norm(["epreuve trial raid",t.n,t.c,t.z,t.note||"",t.s.map(function(s){return s.join(" ")}).join(" ")].join(" "));
+});
+var infoBlob=norm("avant de demarrer info u52 massacor roster hm "+INFO.join(" ")+" "+TODO.join(" "));
+
+/* ===== DISCORD ===== */
+function mdClass(d){
+  var t="**"+d.title+"** ("+ROLE_LBL[d.role].replace(/^\S+\s/,"")+") · U52\n";
+  t+=d.game.map(function(g){return "• "+g}).join("\n")+"\n";
+  t+="**Ultimes :** "+d.ult.join(" / ")+"\n**Build :**\n";
+  t+=d.rows.map(function(r){return "`"+r.piece+"` "+(r.set?"**"+r.set+"**":"—")+" ("+[r.traits,r.poids&&r.poids!=="/"?r.poids:"",r.ench].filter(Boolean).join(", ")+")"}).join("\n");
+  return t;
+}
+function mdFarm(f){
+  return "**⭐ Stuffs à farmer · "+f.role+"** (U52, par ordre de priorité)\n"+f.farm.map(function(g,i){return (i+1)+". "+g}).join("\n");
+}
+function copyText(t,btn){
+  var done=function(){var o=btn.textContent;btn.textContent="✅ Copié !";btn.classList.add("ok");setTimeout(function(){btn.textContent=o;btn.classList.remove("ok")},1600)};
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,function(){fb()})}else fb();
+  function fb(){var a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(e){}document.body.removeChild(a);done()}
+}
+
+/* ===== FILTRES ===== */
+var state={role:"all",q:""};
+var CHIPS=[["all","Tous"],["Tank","🛡️ Tank"],["Heal","💚 Heal"],["DD","⚔️ DD"],["Support","✨ Support"],["trials","🏛️ Épreuves"],["farm","⭐ Farm prio"]];
+var chipsEl=document.getElementById("chips");
+chipsEl.innerHTML=CHIPS.map(function(c){return '<button class="chip'+(c[0]==="all"?' on':'')+'" data-r="'+c[0]+'">'+c[1]+'</button>'}).join("");
+var listEl=document.getElementById("list"),countEl=document.getElementById("count");
+var ALL=C.map(function(d){return {k:"c",o:d,html:cardClass(d)}}).concat(FARM.map(function(f){return {k:"f",o:f,html:cardFarm(f)}}));
+TRIALS.forEach(function(t){ALL.push({k:"t",o:t,html:cardTrial(t)})});
+ALL.push({k:"i",o:{blob:infoBlob,role:"all"},html:cardInfo()});
+
+function render(){
+  var terms=norm(state.q).split(/\s+/).filter(Boolean);
+  var out=[],n=0;
+  ALL.forEach(function(it){
+    var ok=true;
+    if(state.role==="farm")ok=it.k==="f";
+    else if(state.role==="trials")ok=it.k==="t";
+    else if(state.role!=="all"){ok=(it.k==="c"||it.k==="f")&&it.o.role===state.role;}
+    if(ok&&it.k==="i")ok=state.role==="all";
+    if(ok&&terms.length){ok=terms.every(function(t){return it.o.blob.indexOf(t)>-1})}
+    if(ok){out.push(it.html);if(it.k!=="i")n++}
+  });
+  listEl.innerHTML=out.length?out.join(""):'<div class="none-found">Aucun résultat. Essaie un set, une classe ou un rôle.</div>';
+  countEl.textContent=terms.length||state.role!=="all"?n+" fiche"+(n>1?"s":"")+" trouvée"+(n>1?"s":""):"";
+  if(terms.length&&out.length<=3){[].forEach.call(listEl.querySelectorAll(".card"),function(c){c.classList.add("open")})}
+}
+document.getElementById("q").addEventListener("input",function(e){state.q=e.target.value;render()});
+chipsEl.addEventListener("click",function(e){
+  var b=e.target.closest(".chip");if(!b)return;
+  state.role=b.dataset.r;
+  [].forEach.call(chipsEl.children,function(c){c.classList.toggle("on",c===b)});render();
+});
+listEl.addEventListener("click",function(e){
+  var cp=e.target.closest(".copy");
+  if(cp){var id=cp.dataset.copy,txt="";
+    var d=C.filter(function(x){return x.id===id})[0];
+    if(d)txt=mdClass(d);else{var f=FARM.filter(function(x){return x.id===id})[0];if(f)txt=mdFarm(f);else{var tr=TRIALS.filter(function(x){return x.id===id})[0];if(tr)txt=mdTrial(tr)}}
+    copyText(txt,cp);return;}
+  var h=e.target.closest(".hd");if(h)h.parentNode.classList.toggle("open");
+});
+render();
+
+/* ===== PWA ===== */
+(function(){
+  try{
+    var c=document.createElement("canvas");c.width=c.height=512;var x=c.getContext("2d");
+    x.fillStyle="#0f1015";x.fillRect(0,0,512,512);
+    x.fillStyle="#d4af37";x.beginPath();x.moveTo(256,56);x.lineTo(430,120);x.lineTo(410,300);x.quadraticCurveTo(380,420,256,468);x.quadraticCurveTo(132,420,102,300);x.lineTo(82,120);x.closePath();x.fill();
+    x.fillStyle="#0f1015";x.font="bold 230px Georgia,serif";x.textAlign="center";x.textBaseline="middle";x.fillText("D",256,262);
+    var icon=c.toDataURL("image/png");
+    var m={name:"La DecAst - Stuffs TESO",short_name:"DecAst",lang:"fr",start_url:location.href.split("#")[0],scope:location.href.split("#")[0].replace(/[^\/]*$/,""),display:"standalone",background_color:"#0f1015",theme_color:"#0f1015",icons:[{src:icon,sizes:"512x512",type:"image/png",purpose:"any"},{src:icon,sizes:"192x192",type:"image/png"}]};
+    var l=document.createElement("link");l.rel="manifest";l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));document.head.appendChild(l);
+    var ai=document.createElement("link");ai.rel="apple-touch-icon";ai.href=icon;document.head.appendChild(ai);
+  }catch(e){}
+  if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol)){navigator.serviceWorker.register("./sw.js").catch(function(){})}
+  var dp,btn=document.getElementById("install");
+  window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();dp=e;btn.style.display="block"});
+  btn.addEventListener("click",function(){btn.style.display="none";if(dp){dp.prompt();dp=null}});
+  window.addEventListener("appinstalled",function(){btn.style.display="none"});
+})();
+</script>
+</body>
+</html>
